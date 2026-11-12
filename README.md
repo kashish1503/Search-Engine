@@ -1,19 +1,132 @@
-# DS_assign3
- feature similar to 'searchNearby' used in google maps
+# Search Engine
 
-We assume that you have used the ‘search nearby’ feature of Google maps to search for restaurants close to you. (Use it and party with your friends over the upcoming weekend.) How should Google store the locations of restaurants so that it can answer such queries fast? A na ̈ıve idea is use a list and, given a query, scan the list and return the subset of nearby restaurants. This requires time O(n) on a list of n locations. How can we speed this up in practice? Note that the list of restaurants remains fairly unchanged over time, while ‘search nearby’ queries are much more frequent. Therefore, it makes sense to pre-process the list of restaurants and create an appropriate data structure that enables processing ‘search nearby’ queries much faster than a brute-force search (assuming the number of “nearby” restaurants is much smaller than the total number of restaurants, which is typically the case).
+A Python implementation of a **2D range tree** for the *Search Nearby* use case in Google Maps. The project stores a set of two-dimensional points and supports queries that return all points within a given (L_\infty)-distance of a query point.
 
-Problem Statement
-The l∞-distance between two points – p1 = (x1, y1) and p2 = (x2, y2), denoted by ∥p1 − p2∥∞, is defined as max(|x1 − x2|, |y1 − y2|). Given a list S of n data points in R2, a query point q ∈ R2, and a non-negative numberd,we wish to find the set{p∈S|∥p−q∥∞ ≤d},thesetofallpointsinSthatareatmostan l∞-distance d away from the point q. You are required to design and program an appropriate data structure, which we call PointDatabase, to store a set of data points that admits the following.
-1. An algorithm which, given a list S of data points, outputs an object R(S) of PointDatabase which is a “representation” of S.
-2. An algorithm which, given the object R(S) of PointDatabase, a query point q, and a distance d, outputstheset{p∈S|∥p−q∥∞ ≤d}.
-More specifically, your task is to implement a Python class PointDatabase with the following methods.
-• init (self, pointlist): A constructor which, given a list pointlist of pairs of numbers, creates an object of PointDatabase. This method must run in time O(nlogn), where n is the number of points in pointlist.
-• searchNearby(self, q, d): An accessor method which, given a point q and distance d, returns the list of all points, in the set that self represents, that are at l∞-distance at most d from q (arranged in an arbitrary order). This method must run in time O(m + log2 n), where n is the cardinality of the set of points that self represents, and m is the number of points returned.
-For simplicity, you may assume the following.
-1. The coordinates of all points involved are integers (thus, avoiding floats and the resulting errors).
-2. In the list pointlist from which a PointDatabase object is constructed, no two data points have the
-same x-coordinate, and no two data points have the same y-coordinate.
-3. No data point is at l∞-distance exactly d from the query point q.
+This is an academic data-structures project. The implementation is contained in `search.py`.
 
+## Problem
 
+Suppose a map contains a large set of locations. Scanning every location for every nearby-search request takes (O(n)) time per query. A spatial data structure can preprocess the points so that queries can avoid examining the entire dataset.
+
+Given:
+- A set of points (S\subseteq\mathbb{R}^2)
+- A query point (q=(q_x,q_y))
+- A non-negative distance (d)
+
+The task is to return every point (p\in S) whose (L_\infty)-distance from (q) is at most (d).
+
+The (L_\infty)-distance between two points (p_1=(x_1,y_1)) and (p_2=(x_2,y_2)) is:
+
+```text
+||p1 - p2||∞ = max(|x1 - x2|, |y1 - y2|)
+```
+
+Therefore, a point is returned when both conditions hold:
+
+```text
+qx - d <= x <= qx + d
+qy - d <= y <= qy + d
+```
+
+Geometrically, the query searches the axis-aligned square centered at (q), with side length (2d).
+
+## Data Structure
+
+The project implements a **range tree** to organize the input points for spatial queries.
+
+The `PointDatabase` class provides:
+- A constructor that preprocesses a list of two-dimensional points into the range-tree representation.
+- A `searchNearby` method that searches the represented points for those inside the query square.
+
+The implementation maintains point data ordered by coordinate and uses associated Y-ordered point collections while traversing the range-tree structure.
+
+## API
+
+### `PointDatabase(pointlist)`
+
+Constructs a database from a list of coordinate pairs.
+
+- **Input:** `pointlist`, a list of `(x, y)` points.
+- **Purpose:** Builds the range-tree representation used by subsequent queries.
+
+### `searchNearby(q, d)`
+
+Returns the points whose (L_\infty)-distance from query point `q` is at most `d`.
+
+- **Input:** `q`, a query point `(qx, qy)`; `d`, a non-negative distance.
+- **Output:** A list of matching points. The order of returned points is arbitrary.
+
+## Usage
+
+```python
+from search import PointDatabase
+
+points = [
+    (1, 6),
+    (2, 4),
+    (3, 7),
+    (4, 9),
+    (5, 1),
+    (6, 3),
+    (7, 8),
+    (8, 10),
+    (9, 2),
+    (10, 5),
+]
+
+database = PointDatabase(points)
+
+nearby_points = database.searchNearby((5, 5), 1)
+print(nearby_points)
+```
+
+The example constructs a point database and queries for points within (L_\infty)-distance 1 of `(5, 5)`.
+
+## Complexity Requirements
+
+The assignment specifies the following target time complexities:
+
+| Operation | Required complexity |
+|---|---:|
+| Preprocessing / construction | (O(n\log n)) |
+| `searchNearby(q, d)` | (O(m + \log^2 n)) |
+
+Here:
+- (n) is the number of points stored in the database.
+- (m) is the number of points returned by a query.
+
+These are the complexity requirements specified for the assignment; this README does not present them as independently benchmarked performance measurements.
+
+## Input Assumptions
+
+The assignment defines the following assumptions:
+
+1. Point coordinates are integers.
+2. No two input points share the same X-coordinate.
+3. No two input points share the same Y-coordinate.
+4. No input point is at exactly distance (d) from the query point under the (L_\infty) metric.
+
+## Testing
+
+The implementation was run against the test cases provided by the course instructor. The project was developed and evaluated in the context of the assigned problem specification.
+
+## Repository Structure
+
+```text
+Search-Engine/
+├── README.md
+└── search.py
+```
+
+## Concepts
+
+- Two-dimensional range searching
+- Range trees and associated structures
+- Spatial queries
+- (L_\infty) distance
+- Preprocessing for efficient query operations
+- Python data structures and recursion
+
+## Project Context
+
+Developed as an academic data-structures project at **IIT Delhi**. The problem models the spatial-search behavior behind a map application's “Search Nearby” feature.
